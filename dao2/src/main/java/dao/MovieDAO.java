@@ -3,11 +3,13 @@ package dao;
 import datasource.ConnectionFactory;
 import mapper.MovieRowMapper;
 import mapper.RowMapper;
+import model.Director;
 import model.Movie;
 import util.IdSequence;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +17,7 @@ import java.util.Optional;
 public class MovieDAO implements DAO<Movie, Long> {
     private static IdSequence idSequence = new IdSequence();
     private static RowMapper<Movie> rowMapper = MovieRowMapper.getInstance();
+    private static DAO<Director, Long> directorDAO = DirectorDAO.getInstance();
     private static MovieDAO instance;
 
     private MovieDAO() {}
@@ -31,11 +34,18 @@ public class MovieDAO implements DAO<Movie, Long> {
     public Movie insert(Movie movie) throws SQLException {
         Long id = idSequence.getNext();
 
-        String query = "INSERT INTO movie VALUES (?, ?)";
+        Director director = movie.getDirector();
+        if (director != null) saveDirector(movie, director);
+
+        String query = "INSERT INTO movie VALUES (?, ?, ?)";
         try (var conn = ConnectionFactory.getConnection()) {
             var stmt = conn.prepareStatement(query);
             stmt.setLong(1, id);
             stmt.setString(2, movie.getName());
+            if (movie.getDirector() != null)
+                stmt.setLong(3, movie.getDirector().getId());
+            else
+                stmt.setNull(3, Types.BIGINT);
             stmt.executeUpdate();
         }
 
@@ -55,7 +65,14 @@ public class MovieDAO implements DAO<Movie, Long> {
             stmt.setLong(1, id);
             rs = stmt.executeQuery();
 
-            result = rs.next() ? Optional.ofNullable(rowMapper.map(rs)) : Optional.empty();
+            if (rs.next()) {
+                Movie movie = rowMapper.map(rs);
+                long directorId = rs.getLong("director_id"); // в идеале это должно быть не тут
+                result = Optional.of(loadDirector(movie, directorId));
+            }
+            else {
+                result = Optional.empty();
+            }
         }
 
         return result;
@@ -72,10 +89,26 @@ public class MovieDAO implements DAO<Movie, Long> {
             rs = stmt.executeQuery(query);
 
             while (rs.next()) {
-                result.add(rowMapper.map(rs));
+                Movie movie = rowMapper.map(rs);
+                long directorId = rs.getLong("director_id"); // в идеале это должно быть не тут
+                result.add(loadDirector(movie, directorId));
             }
         }
 
         return result;
+    }
+
+    private Movie loadDirector(Movie movie, long directorId) throws SQLException {
+        Director director = directorDAO.get(directorId)
+                .orElseThrow(() -> new RuntimeException("Incorrect director id"));
+        movie.setDirector(director);
+        return movie;
+    }
+
+    private Movie saveDirector(Movie movie, Director director) throws SQLException {
+        if (director.getId() == null || director.getId() == 0L)
+            directorDAO.insert(director);
+        movie.setDirector(director);
+        return movie;
     }
 }

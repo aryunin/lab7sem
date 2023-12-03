@@ -1,5 +1,6 @@
 import dao.DAO;
 import dao.MovieDAO;
+import model.Director;
 import model.Movie;
 import util.Migration;
 
@@ -12,11 +13,15 @@ public class Main {
     public static void main(String[] args) throws SQLException {
         Migration.migrate();
 
-        List<Movie> movies = List.of(
-                new Movie("Pulp Fiction"),
-                new Movie("Titanic"),
-                new Movie("La-La Land")
-        );
+        Movie firstMovie = new Movie("Pulp Fiction");
+        Director firstDirector = new Director("Quentin", "Tarantino");
+        firstMovie.setDirector(firstDirector);
+
+        Movie secondMovie = new Movie("Titanic");
+        Director secondDirector = new Director("James", "Cameron");
+        secondMovie.setDirector(secondDirector);
+
+        List<Movie> movies = List.of(firstMovie, secondMovie);
 
         for (Movie movie : movies)
             movieDAO.insert(movie);
