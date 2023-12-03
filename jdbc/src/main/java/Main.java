@@ -8,8 +8,7 @@ public class Main {
     public static void main(String[] args) throws SQLException {
         try (var con = ConnectionFactory.getConnection()){
 
-            Migration.createTables(con);
-            Migration.insertData(con);
+            Migration.migrate();
 
             String selectMovieSingle = "SELECT name FROM movie WHERE id=?";
             String selectMovieMulti = "SELECT name FROM movie";
