@@ -1,0 +1,5 @@
+spring:
+  cassandra:
+    schema-action: CREATE_IF_NOT_EXISTS
+    local-datacenter: datacenter1
+    keyspace-name: movie

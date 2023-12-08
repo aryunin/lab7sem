@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Movies</title>
+    <link th:rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}"/>
+</head>
+<body>
+
+<div class="container mt-3">
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">фильм</th>
+                    <th scope="col">режиссер</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="movie : ${movies}">
+                    <td th:text="${movie.getName()}"></td>
+                    <td th:text="${movie.getDirectorFirstName()} + ' ' + ${movie.getDirectorLastName}"></td>
+                </tr>
+                </tbody>
+            </table>
+            <hr>
+            <form th:method="GET" th:action="@{/new}">
+                <button type="submit" class="btn btn-primary">Новый фильм</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
